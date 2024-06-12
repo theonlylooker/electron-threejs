@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "commonjs",
+      "strict": true,
+      "esModuleInterop": true,
+      "outDir": "dist",
+      "baseUrl": "./",
+      "paths": {
+        "*": ["node_modules/*"]
+      },
+      "jsx": "react"
+    },
+    "include": [
+      "src/main/**/*.ts", // Include main process files
+      "src/renderer/**/*.tsx" // Include renderer process files
+    ],
+    "exclude": ["node_modules"]
+  }
+  
