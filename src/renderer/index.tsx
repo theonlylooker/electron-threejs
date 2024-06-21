@@ -302,7 +302,7 @@ const App: React.FC = () => {
     camera.position.set(0, 0, 4);
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    // new OrbitControls(camera, renderer.domElement);
+    new OrbitControls(camera, renderer.domElement);
 
     const loader = new GLTFLoader();
 
@@ -311,24 +311,95 @@ const App: React.FC = () => {
       "./tractor.glb",
       (gltf) => {
         modelRef.current = gltf.scene;
-        modelRef.current.traverse((child: THREE.Object3D) => {
-          if (child.name !== "") collectibles.push(child);
+        // modelRef.current.traverse((child: THREE.Object3D) => {
+        //   // if (child.name !== "") collectibles.push(child);
+        //   if ((child as THREE.Mesh).isMesh) {
+        //     const poinstMaterial = new THREE.PointsMaterial({
+        //       color: 0x00ff00,
+        //       size: 0.05,
+        //     });
+        //     const points = new THREE.Points(
+        //       (child as THREE.Mesh).geometry,
+        //       poinstMaterial
+        //     );
+        //     points.name = child.name + "_points";
+        //     points.position.copy(child.position);
+        //     console.log({
+        //       name: child.name,
+        //       geometry: (child as THREE.Mesh).geometry,
+        //       points,
+        //       pointsName: points.name,
+        //     });
+        //     // Add points to the parent of the mesh
+        //     child.parent?.add(points);
+        //     // Remove the mesh from its parent
+        //     child.parent?.remove(child);
+        //     // if ((child as THREE.Mesh).isMesh) {
+        //     //   console.log({ name: child.name });
+        //     //   const poinstMaterial = new THREE.PointsMaterial({
+        //     //     color: 0x00ff00,
+        //     //     size: 0.05,
+        //     //   });
+        //     //   const points = new THREE.Points(
+        //     //     (child as THREE.Mesh).geometry,
+        //     //     poinstMaterial
+        //     //   );
+        //     //   points.position.copy(child.position);
+        //     //   points.name = child.name + "points";
+        //     //   child.parent?.add(points);
+        //     //   child.parent?.remove(child);
+        //     //   // if (!Array.isArray((child as THREE.Mesh).material)) {
+        //     //   //   // const material = (child as THREE.Mesh)
+        //     //   //   //   .material as THREE.MeshStandardMaterial;
+        //     //   //   // const clonedMaterial = material.clone();
+        //     //   //   // clonedMaterial.metalness = 0;
+        //     //   //   // clonedMaterial.emissive.set("crimson");
+        //     //   //   // clonedMaterial.emissiveIntensity = 0;
 
+        //     //   //   // clonedMaterial.color = new THREE.Color("#00ff00");
+
+        //     //   //   // (child as THREE.Mesh).material = clonedMaterial;
+        //     //   // }
+        //   }
+        // });
+        // console.log({ collectibles });
+
+        const processChild = (child: THREE.Object3D) => {
           if ((child as THREE.Mesh).isMesh) {
-            if (!Array.isArray((child as THREE.Mesh).material)) {
-              const material = (child as THREE.Mesh)
-                .material as THREE.MeshStandardMaterial;
-              const clonedMaterial = material.clone();
-              clonedMaterial.metalness = 0;
-              clonedMaterial.emissive.set("crimson");
-              clonedMaterial.emissiveIntensity = 0;
-              // clonedMaterial.color = new THREE.Color("#00ff00");
+            const pointsMaterial = new THREE.PointsMaterial({
+              color: 0x00ff00,
+              size: 0.05,
+            });
+            const points = new THREE.Points(
+              (child as THREE.Mesh).geometry,
+              pointsMaterial
+            );
+            points.name = child.name + "_points";
+            points.position.copy(child.position);
+            points.rotation.copy(child.rotation);
+            points.scale.copy(child.scale);
 
-              (child as THREE.Mesh).material = clonedMaterial;
+            console.log({
+              name: child.name,
+              geometry: (child as THREE.Mesh).geometry,
+              points,
+              pointsName: points.name,
+            });
+
+            // Add points to the parent and remove the original mesh
+            if (child.parent) {
+              child.parent.add(points);
+              child.parent.remove(child);
+            } else {
+              console.warn("Mesh parent not found for:", child.name);
             }
+          } else if (child.isObject3D) {
+            // If the child is an Object3D, traverse its children
+            child.children.forEach(processChild);
           }
-        });
-        console.log({ collectibles });
+        };
+        modelRef.current.traverse(processChild);
+        console.log({ Scene: modelRef.current });
         scene.add(modelRef.current);
         gltf.scene.position.set(0, 0, -1);
         // You can manipulate the loaded model here if needed
