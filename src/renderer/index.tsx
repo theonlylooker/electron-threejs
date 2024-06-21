@@ -311,10 +311,27 @@ const App: React.FC = () => {
       "./tractor.glb",
       (gltf) => {
         modelRef.current = gltf.scene;
+
+        function createWireframe(mesh: THREE.Mesh) {
+          const wireframeGeometry = new THREE.WireframeGeometry(mesh.geometry);
+          const wireframeMaterial = new THREE.LineBasicMaterial({
+            color: 0x000000, // Wireframe color
+            linewidth: 1, // Line thickness
+          });
+
+          const wireframe = new THREE.LineSegments(
+            wireframeGeometry,
+            wireframeMaterial
+          );
+          wireframe.renderOrder = 1; // Ensure wireframe is rendered on top of the mesh
+          mesh.add(wireframe); // Add wireframe as a child of the mesh
+        }
+
         modelRef.current.traverse((child: THREE.Object3D) => {
           if (child.name !== "") collectibles.push(child);
 
           if ((child as THREE.Mesh).isMesh) {
+            createWireframe(child as THREE.Mesh);
             if (!Array.isArray((child as THREE.Mesh).material)) {
               const material = (child as THREE.Mesh)
                 .material as THREE.MeshStandardMaterial;
@@ -322,6 +339,7 @@ const App: React.FC = () => {
               clonedMaterial.metalness = 0;
               clonedMaterial.emissive.set("crimson");
               clonedMaterial.emissiveIntensity = 0;
+
               // clonedMaterial.color = new THREE.Color("#00ff00");
 
               (child as THREE.Mesh).material = clonedMaterial;
